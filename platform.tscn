@@ -1,0 +1,51 @@
+[gd_scene load_steps=3 format=3]
+
+; --- ESCENA DE PLATAFORMA REUTILIZABLE -----------------------------
+; Esta es UNA plataforma de madera. El generador (main.gd) la duplica
+; muchas veces para crear el mundo. Al estar centrada en (0,0), al
+; escalarla en X se ensancha por igual a izquierda y derecha.
+
+[ext_resource type="Texture2D" path="res://madera_textura.jpg" id="1_wood"]
+[ext_resource type="Script" path="res://platform.gd" id="2_platform"]
+
+; Colision de la madera. La hacemos una FRANJA DELGADA (200x10) y la
+; subimos hasta la superficie de la tabla (y=-14). Asi, al ser casi
+; plana, es casi imposible chocar con ella "de lado" y quedarse
+; atascado; solo actua como suelo desde arriba. No hace falta que la
+; colision ocupe todo el grosor visual de la madera.
+[sub_resource type="RectangleShape2D" id="Rect_platform"]
+size = Vector2(200, 10)
+
+; AnimatableBody2D (en vez de StaticBody2D) para que las plataformas
+; MÓVILES puedan llevar al jugador encima. sync_to_physics mantiene el
+; movimiento sincronizado con la física.
+[node name="Platform" type="AnimatableBody2D"]
+sync_to_physics = true
+script = ExtResource("2_platform")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -10)
+shape = SubResource("Rect_platform")
+# Colision de UN SOLO SENTIDO: la madera solo detiene al personaje
+# cuando cae desde ARRIBA (para posarse encima), pero lo deja pasar
+# cuando salta desde abajo. Asi, aunque haya maderas muy juntas, el
+# personaje nunca se queda atascado entre dos. Es la clave de estos
+# juegos de plataformas verticales.
+one_way_collision = true
+
+; Tabla de madera: recortamos 200x28 de la textura (menor que la
+; imagen), asi NO se repite ni sale rayado.
+[node name="Wood" type="Sprite2D" parent="."]
+texture = ExtResource("1_wood")
+region_enabled = true
+region_rect = Rect2(0, 0, 200, 28)
+
+; Brillo en el borde superior (highlight) para dar volumen.
+[node name="TopEdge" type="Polygon2D" parent="."]
+color = Color(0.9, 0.75, 0.55, 1)
+polygon = PackedVector2Array(-100, -14, 100, -14, 100, -9, -100, -9)
+
+; Sombra proyectada debajo: da el efecto de que la plataforma FLOTA.
+[node name="BottomShade" type="Polygon2D" parent="."]
+color = Color(0, 0, 0, 0.25)
+polygon = PackedVector2Array(-100, 12, 100, 12, 100, 24, -100, 24)

@@ -1,0 +1,263 @@
+[gd_scene format=3 uid="uid://dl020mqvj4xsr"]
+
+[ext_resource type="Script" uid="uid://t702aossv8kd" path="res://main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://boqshgvgkdmi0" path="res://player.tscn" id="2_player"]
+[ext_resource type="Texture2D" uid="uid://hpvvw2ywb876" path="res://cielo_textura.jpg" id="3_sky"]
+[ext_resource type="Texture2D" uid="uid://bxdfocbjiwfd6" path="res://pasto_textura.jpg" id="4_grass"]
+[ext_resource type="Script" uid="uid://b7mnpxuxsvrrc" path="res://pausa.gd" id="5_pausa"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gopanel"]
+content_margin_left = 32.0
+content_margin_top = 32.0
+content_margin_right = 32.0
+content_margin_bottom = 32.0
+bg_color = Color(0.1, 0.12, 0.2, 0.94)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.9, 0.35, 0.3, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pausa"]
+content_margin_left = 36.0
+content_margin_top = 36.0
+content_margin_right = 36.0
+content_margin_bottom = 36.0
+bg_color = Color(0.1, 0.14, 0.24, 0.95)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.3, 0.6, 0.95, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="RectangleShape2D" id="Rect_start"]
+size = Vector2(600, 60)
+
+[node name="Main" type="Node2D" unique_id=789792795]
+script = ExtResource("1_main")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1985450950]
+layer = 10
+
+[node name="ScoreLabel" type="Label" parent="UI" unique_id=1088501480]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 44
+text = "Altura: 0 m"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AlturaActualLabel" type="Label" parent="UI" unique_id=1180448305]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 92.0
+offset_right = 150.0
+offset_bottom = 126.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 22
+text = "Actual: 0 m"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GameOver" type="Control" parent="UI" unique_id=1146011224]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Velo" type="ColorRect" parent="UI/GameOver" unique_id=1483227146]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Centro" type="CenterContainer" parent="UI/GameOver" unique_id=1217801080]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="UI/GameOver/Centro" unique_id=1690013927]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gopanel")
+
+[node name="Caja" type="VBoxContainer" parent="UI/GameOver/Centro/Panel" unique_id=1880448304]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Titulo" type="Label" parent="UI/GameOver/Centro/Panel/Caja" unique_id=1703456443]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.4, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 60
+text = "¡GAME OVER!"
+horizontal_alignment = 1
+
+[node name="FraseLabel" type="Label" parent="UI/GameOver/Centro/Panel/Caja" unique_id=1856330066]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "Caíste, pero rendirse no es una opción."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Pista" type="Label" parent="UI/GameOver/Centro/Panel/Caja" unique_id=1577223353]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+text = "Pulsa cualquier tecla para reintentar"
+horizontal_alignment = 1
+
+[node name="MenuPausa" type="Control" parent="UI" unique_id=1266773290]
+process_mode = 3
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_pausa")
+
+[node name="Velo" type="ColorRect" parent="UI/MenuPausa" unique_id=1129001150]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Centro" type="CenterContainer" parent="UI/MenuPausa" unique_id=1000067448]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="UI/MenuPausa/Centro" unique_id=1317214854]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pausa")
+
+[node name="Caja" type="VBoxContainer" parent="UI/MenuPausa/Centro/Panel" unique_id=1963314298]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Titulo" type="Label" parent="UI/MenuPausa/Centro/Panel/Caja" unique_id=1541002930]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 52
+text = "PAUSA"
+horizontal_alignment = 1
+
+[node name="Separador" type="Control" parent="UI/MenuPausa/Centro/Panel/Caja" unique_id=1654603811]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="BotonContinuar" type="Button" parent="UI/MenuPausa/Centro/Panel/Caja" unique_id=1940558665]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "CONTINUAR"
+
+[node name="BotonReiniciar" type="Button" parent="UI/MenuPausa/Centro/Panel/Caja" unique_id=1598291035]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "REINICIAR"
+
+[node name="BotonMenu" type="Button" parent="UI/MenuPausa/Centro/Panel/Caja" unique_id=1191672294]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "MENÚ"
+
+[node name="Background" type="CanvasLayer" parent="." unique_id=1979625970]
+layer = -1
+
+[node name="SkyRect" type="TextureRect" parent="Background" unique_id=1767228657]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_sky")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Signature" type="Label" parent="Background" unique_id=1432769596]
+modulate = Color(1, 1, 1, 0.28)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -67.0
+offset_right = 300.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.12, 0.3, 0.55, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 0.9)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 40
+text = "Team Dead"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StartPlatform" type="StaticBody2D" parent="." unique_id=1586676757]
+position = Vector2(576, 560)
+
+[node name="Shape" type="CollisionShape2D" parent="StartPlatform" unique_id=381640492]
+shape = SubResource("Rect_start")
+
+[node name="Grass" type="Sprite2D" parent="StartPlatform" unique_id=2105474136]
+texture = ExtResource("4_grass")
+region_enabled = true
+region_rect = Rect2(0, 0, 600, 60)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1737593321]
+position = Vector2(576, 440)
+
+[node name="Player" parent="." unique_id=1733043424 instance=ExtResource("2_player")]
+z_index = 1
+position = Vector2(576, 520)
