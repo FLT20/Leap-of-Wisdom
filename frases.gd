@@ -1,154 +1,290 @@
 ## =========================================================================
-##  FRASES DE DIÁLOGO DEL JUEGO
+##  FRASES DE DIÁLOGO DEL JUEGO  (multi-idioma)
 ## =========================================================================
 ##  Única fuente de verdad para todos los textos inspiradores.
-##  Cada lista pertenece a un contexto y la usan DialogManager
-##  (dialog.gd) o los nodos del juego directamente.
+##  Cada categoría tiene su versión en español (_ES) e inglés (_EN).
+##
+##  Uso:
+##    Frases.obtener("game_over")  -> array de frases en el idioma activo
+##
+##  El idioma activo lo decide LanguageManager (Autoload).
+##  Categorías: game_over, inicio, salto, caida, aterrizaje, caminar,
+##              altura, quieto
 ## =========================================================================
-
 class_name Frases
 
 
-# =========================================================================
-#  FRASES DE GAME OVER (se muestran al caer)
-# =========================================================================
-const FRASES_GAME_OVER := [
-	"Caíste, pero rendirse no es una opción. ¡Otra vez!",
-	"Cada caída es un escalón más en tu camino. Levántate.",
-	"Los que nunca se rinden son los que llegan más alto.",
-	"Tropezar está permitido; quedarse en el suelo, no.",
-	"No contamos las caídas, sino las veces que te levantas.",
-	"El que persevera alcanza la cima. Tú puedes.",
-	"Hoy caíste, mañana vuelas. No te detengas.",
-	"Un paso atrás no significa derrota, es impulso.",
-	"Las estrellas no se rindieron: siguen brillando allá arriba.",
-	"Solo pierde quien deja de intentarlo. Sigue.",
-	"La cumbre espera a quien no se cansa de subir.",
-	"Respira. Reintenta. Nadie nació sabiendo volar.",
-	"Cada error te deja más cerca de la cima.",
-	"El mundo es de quien se levanta una vez más.",
-	"No importa cuánto caigas, importa cuánto subas después.",
-	"Grandes cosas nacen después de una buena caída.",
-	"Tu límite está más arriba de lo que crees. ¡Vamos!",
-	"Quien no se rinde jamás conoce la palabra final.",
-	"Esta vez caíste; la próxima, vuelas. Palabra.",
-	"Los campeones se hacen a base de volver a empezar.",
-	"Levántate: la vista desde arriba merece el esfuerzo.",
-	"Nadie dijo que fuera fácil, solo que valdría la pena.",
-	"Cada final es un nuevo borrador. Escribe otro.",
-	"La perseverancia es el superpoder de los valientes.",
-	"No es cuán fuerte es el golpe, sino seguir de pie.",
-	"Subir cansa, pero quedarte abajo cansa más. ¡Arriba!",
-	"El cielo es para quien insiste incluso al caer.",
-	"Un nuevo intento es una nueva oportunidad. Tómate la tuya.",
-	"Caer cien veces y levantarse es de gigantes.",
-	"Tus sueños están más arriba que tus miedos.",
-	"El esfuerzo es la llave que abre el camino.",
-	"Si caes, vuelve a intentarlo con más determinación.",
-	"Cada día es una nueva oportunidad de subir más alto.",
-	"La cima no se alcanza sin caer, pero tampoco sin seguir.",
-	"Respira hondo y elige levantarte otra vez.",
-	"Ya no estás lejos, solo te faltan unas pocas respiraciones.",
-	"El camino se abre a quien lo quiere recorrer.",
-	"Sígueme, no pierdas la vista de la meta.",
-	"Reta a ti mismo, no a la fría realidad.",
-	"La perseverancia es el compañero que nunca duerme contigo.",
-	"Las estrellas no se preocupan por tus caídas, solo por tus sueños.",
-	"Un pequeño esfuerzo hoy puede crear un gran logro mañana.",
-	"El resorte de la vida siempre te devuelve a la cima.",
-	"Al llegar a la cima, verás por qué siguieron bajando.",
-	"La risa y la vida te acompañan si no te rindes.",
-	"La compasión y la paciencia son tu mejor aliada.",
-	"El aroma de la victoria se cuela entre las sombras.",
-	"El próximo intento es un regalo del destino.",
-	"Los más altos picos se alcanzan con paciencia.",
-	"La victoria es una meta que se alcanza con cuidado.",
-	"La voluntad fuerte hace que el camino se abra.",
-	"En cada caída, una nueva oportunidad de triunfar.",
-	"El miedo es solo la señal de que estás cerca de algo grande.",
-	"El éxito no es un fin, es el inicio de una nueva historia.",
-	"La esperanza es la fuerza que te mantiene recto."
-]
+## Devuelve la lista de frases de una categoría en el idioma activo.
+static func obtener(categoria: String) -> Array:
+	var en: Array = _EN.get(categoria, [])
+	var es: Array = _ES.get(categoria, [])
+	var lista: Array = en if LanguageManager.codigo_idioma() == "en" else es
+	return lista.duplicate()
 
 
 # =========================================================================
-#  FRASES DE INICIO (burbuja manual con la tecla M)
+#  ESPAÑOL
 # =========================================================================
-## Se muestran al pedirlas pulsando M. DialogManager las usa para
-## decidir qué frase encaja con el contexto actual del personaje.
-const FRASES_INICIO := [
-	"¡Vamos! Pulsa ESPACIO para saltar y sube alto.",
-	"¡Tú puedes! Usa las flechas y el espacio para avanzar.",
-	"Empieza poco a poco: salta de madera en madera.",
-	"¡Ánimo! Cada salto te acerca a la cima.",
-	"No tengas miedo: salta y verás qué alto llegas.",
-	"Muévete con las flechas y salta con ESPACIO. ¡Vamos!",
-	"¡Hoy es tu día! Da el primer salto hacia arriba.",
-	"Respira hondo y salta. Lo harás genial.",
-	"¡Empieza ya! Las mejores vistas están arriba.",
-	"Un solo salto puede cambiarlo todo. ¡Inténtalo!"
-]
+static var _ES := {
+	"game_over": [
+		"Caíste, pero rendirse no es una opción. ¡Otra vez!",
+		"Cada caída es un escalón más en tu camino. Levántate.",
+		"Los que nunca se rinden son los que llegan más alto.",
+		"Tropezar está permitido; quedarse en el suelo, no.",
+		"No contamos las caídas, sino las veces que te levantas.",
+		"El que persevera alcanza la cima. Tú puedes.",
+		"Hoy caíste, mañana vuelas. No te detengas.",
+		"Un paso atrás no significa derrota, es impulso.",
+		"Las estrellas no se rindieron: siguen brillando allá arriba.",
+		"Solo pierde quien deja de intentarlo. Sigue.",
+		"La cumbre espera a quien no se cansa de subir.",
+		"Respira. Reintenta. Nadie nació sabiendo volar.",
+		"Cada error te deja más cerca de la cima.",
+		"El mundo es de quien se levanta una vez más.",
+		"No importa cuánto caigas, importa cuánto subas después.",
+		"Grandes cosas nacen después de una buena caída.",
+		"Tu límite está más arriba de lo que crees. ¡Vamos!",
+		"Quien no se rinde jamás conoce la palabra final.",
+		"Esta vez caíste; la próxima, vuelas. Palabra.",
+		"Los campeones se hacen a base de volver a empezar.",
+		"Levántate: la vista desde arriba merece el esfuerzo.",
+		"Nadie dijo que fuera fácil, solo que valdría la pena.",
+		"Cada final es un nuevo borrador. Escribe otro.",
+		"La perseverancia es el superpoder de los valientes.",
+		"No es cuán fuerte es el golpe, sino seguir de pie.",
+		"Subir cansa, pero quedarte abajo cansa más. ¡Arriba!",
+		"El cielo es para quien insiste incluso al caer.",
+		"Un nuevo intento es una nueva oportunidad. Tómate la tuya.",
+		"Caer cien veces y levantarse es de gigantes.",
+		"Tus sueños están más arriba que tus miedos.",
+		"El esfuerzo es la llave que abre el camino.",
+		"Si caes, vuelve a intentarlo con más determinación.",
+		"Cada día es una nueva oportunidad de subir más alto.",
+		"La cima no se alcanza sin caer, pero tampoco sin seguir.",
+		"Respira hondo y elige levantarte otra vez.",
+		"Ya no estás lejos, solo te faltan unas pocas respiraciones.",
+		"El camino se abre a quien lo quiere recorrer.",
+		"Sígueme, no pierdas la vista de la meta.",
+		"Reta a ti mismo, no a la fría realidad.",
+		"La perseverancia es el compañero que nunca duerme contigo.",
+		"Las estrellas no se preocupan por tus caídas, solo por tus sueños.",
+		"Un pequeño esfuerzo hoy puede crear un gran logro mañana.",
+		"El resorte de la vida siempre te devuelve a la cima.",
+		"Al llegar a la cima, verás por qué siguieron bajando.",
+		"La risa y la vida te acompañan si no te rindes.",
+		"La compasión y la paciencia son tu mejor aliada.",
+		"El aroma de la victoria se cuela entre las sombras.",
+		"El próximo intento es un regalo del destino.",
+		"Los más altos picos se alcanzan con paciencia.",
+		"La victoria es una meta que se alcanza con cuidado.",
+		"La voluntad fuerte hace que el camino se abra.",
+		"En cada caída, una nueva oportunidad de triunfar.",
+		"El miedo es solo la señal de que estás cerca de algo grande.",
+		"El éxito no es un fin, es el inicio de una nueva historia.",
+		"La esperanza es la fuerza que te mantiene recto.",
+	],
+	"inicio": [
+		"¡Vamos! Pulsa ESPACIO para saltar y sube alto.",
+		"¡Tú puedes! Usa las flechas y el espacio para avanzar.",
+		"Empieza poco a poco: salta de madera en madera.",
+		"¡Ánimo! Cada salto te acerca a la cima.",
+		"No tengas miedo: salta y verás qué alto llegas.",
+		"Muévete con las flechas y salta con ESPACIO. ¡Vamos!",
+		"¡Hoy es tu día! Da el primer salto hacia arriba.",
+		"Respira hondo y salta. Lo harás genial.",
+		"¡Empieza ya! Las mejores vistas están arriba.",
+		"Un solo salto puede cambiarlo todo. ¡Inténtalo!",
+	],
+	"salto": [
+		"¡Arriba! Eso es, sigue subiendo.",
+		"¡Muy bien! Vas por buen camino.",
+		"¡Eso es! Cada salto cuenta.",
+		"¡Sigue así! Lo estás haciendo genial.",
+		"¡Vamos! Estás más cerca de la cima.",
+	],
+	"caida": [
+		"¡No pasa nada! Vuelve a intentarlo.",
+		"Caer está bien: lo importante es seguir.",
+		"¡Tranquilo! Todos caen, tú sigues adelante.",
+		"Aterriza y vuelve a saltar. ¡Tú puedes!",
+		"Un tropiezo no es el final. ¡Ánimo!",
+	],
+	"aterrizaje": [
+		"¡Bien! Apoyo firme, sigue así.",
+		"¡Perfecto! Ya estás de vuelta en pie.",
+		"¡Muy bien! Ahora a por el siguiente salto.",
+		"¡Genial! Pisa firme y continúa.",
+		"¡Eso es! Pulsa de nuevo para seguir.",
+	],
+	"caminar": [
+		"¡Ya estás en marcha! Continúa.",
+		"Buen control, sigue así.",
+		"Cada paso te acerca a la cima.",
+		"El mundo es de quien se mueve.",
+		"La página no se escribe si no se empieza.",
+	],
+	"altura": [
+		"¡Muy alto! Sigues subiendo.",
+		"Mira todo desde aquí. ¡Increíble!",
+		"Cuanto más subes, mejor se ve. ¡Sigue!",
+		"Estás dejando atrás el suelo. ¡Bien hecho!",
+		"Desde aquí todo se ve pequeño. ¡Impresionante!",
+		"Vas conquistando el cielo paso a paso. ¡Genial!",
+		"Las alturas son para valientes como tú. ¡Arriba!",
+		"Cada metro cuenta, y tú sumas muchos. ¡Eso es!",
+	],
+	"quieto": [
+		"El reposo es parte del camino. Continúa cuando estés listo.",
+		"Un momento de calma es el inicio de una nueva subida.",
+		"Respira. Hasta los que escalan paran a mirar la vista.",
+		"Tómate tu tiempo: la prisa no sube montañas.",
+		"Quieto hoy, mañana con más fuerza. Tú decides cuándo.",
+		"Una pausa sabia vale más que diez pasos torpes.",
+	],
+	"coleccionable": [
+		"El que busca tesoros entre las nubes ya cambió su forma de mirar.",
+		"Una frase a tiempo puede ser el impulso que te faltaba.",
+		"Filosofía de altura: no importa cuánto subes, sino cuánto disfrutas.",
+		"Hasta el bambú más alto inclinó su copa antes de crecer.",
+		"Las mejores vistas siempre requieren haber subido.",
+		"Sabio no es quien más sabe, sino quien más se atreve.",
+		"¿Sabías que las nubes también saltan? Solo que sin madera.",
+		"La vida es como este juego: a veces caes, pero siempre puedes volver.",
+		"Cree en ti tanto como esta burbuja cree en ti.",
+		"El tesoro no siempre es oro; a veces es una buena idea.",
+	],
+}
 
 
 # =========================================================================
-#  FRASES AUTOMÁTICAS (alias de compatibilidad)
+#  ENGLISH
 # =========================================================================
-## DialogManager las usa cuando se pide una frase sin contexto concreto.
-## Apuntan a las mismas frases de inicio para no duplicar datos.
-const FRASES_AUTOMATICAS := FRASES_INICIO
-
-
-# =========================================================================
-#  FRASES DE ACCIÓN (se activan al hacer algo concreto)
-# =========================================================================
-const FRASES_SALTO := [
-	"¡Arriba! Eso es, sigue subiendo.",
-	"¡Muy bien! Vas por buen camino.",
-	"¡Eso es! Cada salto cuenta.",
-	"¡Sigue así! Lo estás haciendo genial.",
-	"¡Vamos! Estás más cerca de la cima."
-]
-
-const FRASES_CAIDA := [
-	"¡No pasa nada! Vuelve a intentarlo.",
-	"Caer está bien: lo importante es seguir.",
-	"¡Tranquilo! Todos caen, tú sigues adelante.",
-	"Aterriza y vuelve a saltar. ¡Tú puedes!",
-	"Un tropiezo no es el final. ¡Ánimo!"
-]
-
-const FRASES_ATERRIZAJE := [
-	"¡Bien! Apoyo firme, sigue así.",
-	"¡Perfecto! Ya estás de vuelta en pie.",
-	"¡Muy bien! Ahora a por el siguiente salto.",
-	"¡Genial! Pisa firme y continúa.",
-	"¡Eso es! Pulsa de nuevo para seguir."
-]
-
-const FRASES_CAMINAR := [
-	"¡Ya estás en marcha! Continúa.",
-	"Buen control, sigue así.",
-	"Cada paso te acerca a la cima.",
-	"El mundo es de quien se mueve.",
-	"La página no se escribe si no se empieza."
-]
-
-const FRASES_ALTURA := [
-	"¡Muy alto! Sigues subiendo.",
-	"Mira todo desde aquí. ¡Increíble!",
-	"Cuanto más subes, mejor se ve. ¡Sigue!",
-	"Estás dejando atrás el suelo. ¡Bien hecho!",
-	"Desde aquí todo se ve pequeño. ¡Impresionante!",
-	"Vas conquistando el cielo paso a paso. ¡Genial!",
-	"Las alturas son para valientes como tú. ¡Arriba!",
-	"Cada metro cuenta, y tú sumas muchos. ¡Eso es!"
-]
-
-const FRASES_QUIETO := [
-	"El reposo es parte del camino. Continúa cuando estés listo.",
-	"Un momento de calma es el inicio de una nueva subida.",
-	"Respira. Hasta los que escalan paran a mirar la vista.",
-	"Tómate tu tiempo: la prisa no sube montañas.",
-	"Quieto hoy, mañana con más fuerza. Tú decides cuándo.",
-	"Una pausa sabia vale más que diez pasos torpes."
-]
+static var _EN := {
+	"game_over": [
+		"You fell, but giving up is not an option. Again!",
+		"Every fall is one more step on your path. Get up.",
+		"Those who never give up are the ones who reach the highest.",
+		"Stumbling is allowed; staying on the ground is not.",
+		"We don't count the falls, but the times you get back up.",
+		"Whoever perseveres reaches the summit. You can do it.",
+		"Today you fell, tomorrow you fly. Don't stop.",
+		"A step back is not defeat, it's momentum.",
+		"The stars never gave up: they keep shining up there.",
+		"Only those who stop trying lose. Keep going.",
+		"The summit awaits those who never tire of climbing.",
+		"Breathe. Try again. Nobody was born knowing how to fly.",
+		"Every mistake brings you closer to the summit.",
+		"The world belongs to those who get up one more time.",
+		"It doesn't matter how much you fall, but how much you climb after.",
+		"Great things are born after a good fall.",
+		"Your limit is higher than you think. Let's go!",
+		"Those who never give up never know the final word.",
+		"This time you fell; next time, you fly. Promise.",
+		"Champions are made by starting over again.",
+		"Get up: the view from above is worth the effort.",
+		"No one said it would be easy, only that it would be worth it.",
+		"Every ending is a new draft. Write another.",
+		"Perseverance is the superpower of the brave.",
+		"It's not how hard you hit, but staying on your feet.",
+		"Climbing is tiring, but staying down is more tiring. Up!",
+		"The sky is for those who insist even when falling.",
+		"A new attempt is a new opportunity. Take yours.",
+		"Falling a hundred times and getting up is for giants.",
+		"Your dreams are higher than your fears.",
+		"Effort is the key that opens the path.",
+		"If you fall, try again with more determination.",
+		"Every day is a new chance to climb higher.",
+		"The summit is not reached without falling, but also not without continuing.",
+		"Take a deep breath and choose to get up again.",
+		"You're not far now, just a few breaths away.",
+		"The path opens for those who want to walk it.",
+		"Follow me, don't lose sight of the goal.",
+		"Challenge yourself, not the cold reality.",
+		"Perseverance is the companion that never sleeps beside you.",
+		"The stars don't worry about your falls, only your dreams.",
+		"A small effort today can create a great achievement tomorrow.",
+		"Life's spring always brings you back to the top.",
+		"When you reach the summit, you'll see why others kept going down.",
+		"Laughter and life accompany you if you don't give up.",
+		"Compassion and patience are your best allies.",
+		"The scent of victory slips through the shadows.",
+		"The next attempt is a gift from fate.",
+		"The highest peaks are reached with patience.",
+		"Victory is a goal reached with care.",
+		"Strong will makes the path open up.",
+		"In every fall, a new chance to triumph.",
+		"Fear is only the sign that you're close to something great.",
+		"Success is not an end, it's the start of a new story.",
+		"Hope is the force that keeps you upright.",
+	],
+	"inicio": [
+		"Let's go! Press SPACE to jump and climb high.",
+		"You can do it! Use the arrows and space to move.",
+		"Start little by little: jump from log to log.",
+		"Cheer up! Every jump brings you closer to the summit.",
+		"Don't be afraid: jump and see how high you get.",
+		"Move with the arrows and jump with SPACE. Let's go!",
+		"Today is your day! Take the first jump upward.",
+		"Take a deep breath and jump. You'll do great.",
+		"Start now! The best views are up there.",
+		"A single jump can change everything. Try it!",
+	],
+	"salto": [
+		"Up! That's it, keep climbing.",
+		"Very good! You're on the right track.",
+		"That's it! Every jump counts.",
+		"Keep it up! You're doing great.",
+		"Let's go! You're closer to the summit.",
+	],
+	"caida": [
+		"It's okay! Try again.",
+		"Falling is fine: the important thing is to keep going.",
+		"Relax! Everyone falls, you keep going.",
+		"Land and jump again. You can do it!",
+		"A stumble is not the end. Cheer up!",
+	],
+	"aterrizaje": [
+		"Nice! Firm footing, keep it up.",
+		"Perfect! You're back on your feet.",
+		"Very good! Now for the next jump.",
+		"Great! Step firmly and carry on.",
+		"That's it! Press again to keep going.",
+	],
+	"caminar": [
+		"You're on the move! Keep going.",
+		"Good control, keep it up.",
+		"Every step brings you closer to the summit.",
+		"The world belongs to those who move.",
+		"The page isn't written if you don't start.",
+	],
+	"altura": [
+		"Very high! You keep climbing.",
+		"Look at everything from here. Incredible!",
+		"The higher you go, the better it looks. Keep going!",
+		"You're leaving the ground behind. Well done!",
+		"From here everything looks small. Impressive!",
+		"You're conquering the sky step by step. Great!",
+		"Heights are for the brave like you. Up!",
+		"Every meter counts, and you're adding many. That's it!",
+	],
+	"quieto": [
+		"Rest is part of the journey. Continue when you're ready.",
+		"A moment of calm is the start of a new climb.",
+		"Breathe. Even climbers stop to look at the view.",
+		"Take your time: haste doesn't climb mountains.",
+		"Still today, stronger tomorrow. You decide when.",
+		"A wise pause is worth more than ten clumsy steps.",
+	],
+	"coleccionable": [
+		"Those who seek treasures among the clouds already see differently.",
+		"A timely word can be the push you were missing.",
+		"High-altitude philosophy: it's not how high you get, but how much you enjoy it.",
+		"Even the tallest bamboo bent before it grew.",
+		"The best views always require having climbed.",
+		"A wise person isn't the one who knows most, but who dares most.",
+		"Did you know clouds jump too? Just without wooden platforms.",
+		"Life is like this game: sometimes you fall, but you can always get back up.",
+		"Believe in yourself as much as this bubble believes in you.",
+		"Treasure isn't always gold; sometimes it's just a good idea.",
+	],
+}

@@ -38,6 +38,18 @@ corner_radius_top_right = 24
 corner_radius_bottom_right = 24
 corner_radius_bottom_left = 24
 
+; Fondo azul reutilizable para los botones de idioma del menú de pausa.
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boton"]
+bg_color = Color(0.2, 0.5, 0.9, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+
 [sub_resource type="RectangleShape2D" id="Rect_start"]
 size = Vector2(600, 60)
 
@@ -61,7 +73,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 10
 theme_override_font_sizes/font_size = 44
-text = "Altura: 0 m"
+text = "Altura máxima: 0 m"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -81,6 +93,24 @@ theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 22
 text = "Actual: 0 m"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+; Contador de coleccionables de frases recogidos (arriba a la izquierda).
+[node name="ContadorFrases" type="Label" parent="UI" unique_id=2001001001]
+anchors_preset = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = -58.0
+offset_right = 220.0
+offset_bottom = -18.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 26
+text = "✦ 0"
+horizontal_alignment = 0
 vertical_alignment = 1
 
 [node name="GameOver" type="Control" parent="UI" unique_id=1146011224]
@@ -210,6 +240,86 @@ theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 22
 text = "MENÚ"
 
+[node name="SeparadorIdiomas" type="Control" parent="UI/MenuPausa/Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="BotonIdioma" type="Button" parent="UI/MenuPausa/Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boton")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boton")
+text = "Idioma"
+
+; --- CUADRO EMERGENTE DE SELECCIÓN DE IDIOMA (en pausa) --------------
+[node name="CuadroIdioma" type="Control" parent="UI/MenuPausa"]
+process_mode = 3
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Velo" type="ColorRect" parent="UI/MenuPausa/CuadroIdioma"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Centro" type="CenterContainer" parent="UI/MenuPausa/CuadroIdioma"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="UI/MenuPausa/CuadroIdioma/Centro"]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pausa")
+
+[node name="Caja" type="VBoxContainer" parent="UI/MenuPausa/CuadroIdioma/Centro/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Titulo" type="Label" parent="UI/MenuPausa/CuadroIdioma/Centro/Panel/Caja"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "Selecciona un idioma"
+horizontal_alignment = 1
+
+[node name="BotonES" type="Button" parent="UI/MenuPausa/CuadroIdioma/Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boton")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boton")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_pausa")
+text = "Español"
+
+[node name="BotonEN" type="Button" parent="UI/MenuPausa/CuadroIdioma/Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boton")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boton")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_pausa")
+text = "English"
+
 [node name="Background" type="CanvasLayer" parent="." unique_id=1979625970]
 layer = -1
 
@@ -246,6 +356,8 @@ vertical_alignment = 1
 
 [node name="StartPlatform" type="StaticBody2D" parent="." unique_id=1586676757]
 position = Vector2(576, 560)
+collision_layer = 2
+collision_mask = 0
 
 [node name="Shape" type="CollisionShape2D" parent="StartPlatform" unique_id=381640492]
 shape = SubResource("Rect_start")

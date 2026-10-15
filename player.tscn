@@ -6,9 +6,11 @@
 [ext_resource type="Script" path="res://player_animation.gd" id="4_anim"]
 [ext_resource type="Script" path="res://dialog.gd" id="5_dialog"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
-radius = 11.0
-height = 70.0
+[sub_resource type="CircleShape2D" id="CircleShape2D_head"]
+radius = 50.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detector"]
+radius = 58.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_head"]
 shader = ExtResource("3_headshader")
@@ -33,73 +35,50 @@ content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
 
+; --- JUGADOR: solo la cabeza flotante -------------------------------
+; El personaje ya no tiene cuerpo ni extremidades: es únicamente la
+; imagen de la cabeza (recortada en círculo con el shader), centrada en
+; el origen del CharacterBody2D. Así, la parte inferior de la cabeza
+; apoya justo sobre las maderas.
 [node name="Player" type="CharacterBody2D" unique_id=711896132]
 script = ExtResource("1_player")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1713976917]
-position = Vector2(0, -46)
-shape = SubResource("CapsuleShape2D_body")
+; Colisión circular centrada en el origen (coincide con la cabeza).
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_head")
 
-[node name="Body" type="Node2D" parent="." unique_id=2104362252]
+; --- DETECTOR DE COLECCIONABLES --------------------------------------
+; Área algo mayor que la cabeza. Detecta los recogibles (capa 3) para
+; entregar frases al tocarlos. No afecta al movimiento físico.
+[node name="Detector" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 3
+monitoring = true
+
+[node name="Forma" type="CollisionShape2D" parent="Detector"]
+shape = SubResource("CircleShape2D_detector")
+
+; La cabeza. El script player_animation.gd le da vida (squash, balanceo,
+; inclinación). Funciona con cualquier textura (foto actual o sprite futuro).
+[node name="Head" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_head")
+scale = Vector2(0.078, 0.078)
+texture = ExtResource("2_head")
 script = ExtResource("4_anim")
 
-[node name="LegLeft" type="Node2D" parent="Body" unique_id=1138002425]
-position = Vector2(-6, -42)
-
-[node name="LegLeftMesh" type="Polygon2D" parent="Body/LegLeft" unique_id=1752830351]
-color = Color(0.25, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-4, 0, 4, 0, 3, 42, -3, 42)
-
-[node name="LegRight" type="Node2D" parent="Body" unique_id=165446264]
-position = Vector2(6, -42)
-
-[node name="LegRightMesh" type="Polygon2D" parent="Body/LegRight" unique_id=39880401]
-color = Color(0.25, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-4, 0, 4, 0, 3, 42, -3, 42)
-
-[node name="ArmLeft" type="Node2D" parent="Body" unique_id=1924437282]
-position = Vector2(-11, -66)
-
-[node name="ArmLeftMesh" type="Polygon2D" parent="Body/ArmLeft" unique_id=428245638]
-color = Color(0.98, 0.8, 0.62, 1)
-polygon = PackedVector2Array(-3, 0, 3, 0, 2, 16, -2, 16)
-
-[node name="Torso" type="Polygon2D" parent="Body" unique_id=1198797165]
-color = Color(0.2, 0.55, 0.9, 1)
-polygon = PackedVector2Array(-9, -70, 9, -70, 7, -42, -7, -42)
-
-[node name="ArmRight" type="Node2D" parent="Body" unique_id=25849251]
-position = Vector2(11, -66)
-
-[node name="ArmRightMesh" type="Polygon2D" parent="Body/ArmRight" unique_id=1678728291]
-color = Color(0.98, 0.8, 0.62, 1)
-polygon = PackedVector2Array(-3, 0, 3, 0, 2, 16, -2, 16)
-
-[node name="Head" type="Sprite2D" parent="Body" unique_id=139968969]
-material = SubResource("ShaderMaterial_head")
-position = Vector2(0, -82)
-scale = Vector2(0.125, 0.125)
-texture = ExtResource("2_head")
-
 ; --- BURBUJA DE TEXTO FLOTANTE -------------------------------------
-; Es hija directa del Player (no del cuerpo) para que NO rote ni se
-; gire con la animacion. Es un PanelContainer: se AUTO-AJUSTA al
-; tamano del texto que contenga (por eso "se adapta a la cantidad de
-; texto"). Empieza oculta (visible=false); se muestra/oculta con M.
+; Hija directa del Player para que NO rote con la cabeza. Se muestra/oculta
+; con la tecla M. Empieza oculta.
 [node name="SpeechBubble" type="PanelContainer" parent="."]
 visible = false
-offset_left = -90.0
-offset_top = -240.0
-offset_right = 90.0
-offset_bottom = -200.0
+offset_left = -140.0
+offset_top = -175.0
+offset_right = 140.0
+offset_bottom = -135.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_bubble")
 
-; El Label es el texto de dentro. Le ponemos un ancho FIJO (custom
-; minimum size en X). Como el PanelContainer dimensiona a su hijo por
-; su tamaño minimo, y el Label con autowrap respeta ese ancho, la
-; burbuja NUNCA se ensancha mas de aqui: la frase larga BAJA en varias
-; lineas y el panel crece hacia abajo (en alto), no hacia los lados.
+; El Label dimensiona la burbuja: ancho fijo, el texto baja en líneas.
 [node name="Label" type="Label" parent="SpeechBubble"]
 custom_minimum_size = Vector2(280, 0)
 theme_override_colors/font_color = Color(0.1, 0.1, 0.15, 1)
@@ -110,8 +89,6 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 ; --- GESTOR DE DIÁLOGO -----------------------------------------------
-; Nodo independiente (dialog.gd) que gira las frases de la burbuja
-; por su cuenta. El jugador solo le pasa la lista de frases y le avisa
-; cuando el jugador interactúa.
+; Nodo independiente (dialog.gd) que gira las frases de la burbuja.
 [node name="DialogueManager" type="Node" parent="."]
 script = ExtResource("5_dialog")

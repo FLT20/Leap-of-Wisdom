@@ -1,65 +1,135 @@
 ## =========================================================================
-##  ANIMACIÓN DEL CUERPO  (nodo "Body")
+##  ANIMACIÓN DE LA CABEZA FLOTANTE  (nodo "Head")
 ## =========================================================================
-##  Nodo independiente encargado SOLO de la animación procedural del
-##  personaje: orientar el cuerpo y balancear piernas/brazos.
-##  El jugador le pasa el estado (velocidad y si está en suelo) para que
-##  este nodo no dependa de la física del CharacterBody2D.
+##  El personaje es SOLO la cabeza (una imagen). Este script le da vida con
+##  animación 100% procedural, pensada para una cara/cabeza que flota y
+##  salta. Funciona con CUALQUIER textura (foto actual o sprite futuro).
+##
+##  Efectos cartoon:
+##    - SQUASH & STRETCH con REBOTE (gelatina): al aterrizar aplasta,
+##      rebota estirada y se asienta. Al saltar, estira y rebota.
+##    - APLASTADO PROVOCADO: con flecha ABAJO la cabeza se achatarra mucho
+##      (carga) para luego salir disparada (lo dispara el jugador).
+##    - INCLINACIÓN (roll): se ladea según la velocidad horizontal.
+##    - BALANCEO/flotación: pequeño bob mientras está en el aire.
+##
+##  No depende de la física: el jugador le pasa el estado cada frame.
 ## =========================================================================
-
 extends Node2D
 
 
-## Rapidez con la que piernas/brazos alcanzan su pose objetivo.
-const ANIM_LERP := 14.0
+# =========================================================================
+#  AJUSTES
+# =========================================================================
+## Escala base de la cabeza. DEBE coincidir con la del nodo "Head" en
+## player.tscn (para que el squash no cambie el tamaño "en reposo").
+const ESCALA_BASE := 0.078
 
-## Frecuencia de balanceo de piernas al caminar.
-const WALK_FREQ := 12.0
+## Inclinación máxima (radianes) al moverse a toda velocidad.
+const ROLL_MAX := 0.38
 
+## Fuerza del rebote/golpe (0..1 del tamaño).
+const GOLPE_FUERZA := 0.30
 
-# Referencias a las extremidades (hijas de este nodo).
-@onready var _pierna_izq: Node2D = $LegLeft
-@onready var _pierna_der: Node2D = $LegRight
-@onready var _brazo_izq: Node2D = $ArmLeft
-@onready var _brazo_der: Node2D = $ArmRight
+## Duración del rebote (s). Más alto = rebote más lento y visible.
+const GOLPE_DUR := 0.42
 
-# Reloj interno de la animación de caminar.
-var _anim_time: float = 0.0
+## Cuánto se achatarra la cabeza con la flecha ABAJO (0..1).
+const APLASTADO_FUERZA := 0.46
+
+## Suavidad al entrar/salir del aplastado.
+const APLASTADO_LERP := 15.0
+
+## Amplitud (px) y frecuencia del balanceo/flotación en el aire.
+const BOB_AMP := 3.0
+const BOB_FREC := 6.0
+
+## Suavidad de la inclinación.
+const ROLL_LERP := 12.0
 
 
 # =========================================================================
-#  ANIMACIÓN
+#  ESTADO INTERNO
 # =========================================================================
-## Actualiza la pose del personaje. Llamado por el jugador cada frame.
-## `velocidad_x`: velocidad horizontal actual.
-## `en_suelo`: true si el personaje está apoyado en el suelo.
-func actualizar_animacion(delta: float, velocidad_x: float, en_suelo: bool) -> void:
-	# --- Orientación del cuerpo según la dirección --------------------
-	if velocidad_x > 1.0:
-		scale.x = 1.0
-	elif velocidad_x < -1.0:
-		scale.x = -1.0
+var _tiempo: float = 0.0        # reloj para el balanceo
+var _roll: float = 0.0          # inclinación actual (interpolada)
 
-	var target_leg := 0.0
-	var target_arm := 0.0
+# --- Rebote (resorte de gelatina) ---
+var _golpe_activo: bool = false
+var _golpe_t: float = 0.0       # tiempo transcurrido del golpe
+var _golpe_dir: float = 1.0     # +1 = primer movimiento estira, -1 = aplasta
 
+# --- Aplastado por input (flecha abajo) ---
+var _aplastado: float = 0.0     # 0 = normal, 1 = muy chaparro (suavizado)
+
+
+# =========================================================================
+#  API: la llama el jugador cada frame
+# =========================================================================
+## `velocidad_x`/`velocidad_y`: velocidad actual. `en_suelo`: apoyado o no.
+## `input_aplastado`: true si el jugador mantiene flecha ABAJO en el suelo.
+func actualizar_animacion(delta: float, velocidad_x: float, velocidad_y: float, en_suelo: bool, input_aplastado: bool = false) -> void:
+	_tiempo += delta
+
+	# --- Aplastado por input (suavizado) -------------------------------
+	var objetivo_aplastado: float = 1.0 if (input_aplastado and en_suelo) else 0.0
+	_aplastado = lerp(_aplastado, objetivo_aplastado, APLASTADO_LERP * delta)
+
+	# --- Inclinación según velocidad horizontal ------------------------
+	var objetivo_roll: float = clamp(-velocidad_x / 300.0, -1.0, 1.0) * ROLL_MAX
+	_roll = lerp(_roll, objetivo_roll, ROLL_LERP * delta)
+	rotation = _roll
+
+	# --- Squash & stretch base según el estado -------------------------
+	var sx := 1.0
+	var sy := 1.0
 	if not en_suelo:
-		# En el aire: piernas recogidas y brazos arriba.
-		target_leg = 0.45
-		target_arm = 2.2
-	elif abs(velocidad_x) > 1.0:
-		# Caminando: balanceo senoidal de piernas y brazos.
-		_anim_time += delta
-		var swing := sin(_anim_time * WALK_FREQ)
-		target_leg = swing * 0.6
-		target_arm = -swing * 0.7
-	else:
-		# Quieto: reiniciamos el reloj del balanceo.
-		_anim_time = 0.0
+		if velocidad_y < 0.0:
+			sy = 1.08   # subiendo: estirado
+			sx = 0.95
+		else:
+			sy = 1.10   # cayendo: algo más estirado
+			sx = 0.94
 
-	# Interpolación suave hacia la pose objetivo.
-	var t := ANIM_LERP * delta
-	_pierna_der.rotation = lerp_angle(_pierna_der.rotation, target_leg, t)
-	_pierna_izq.rotation = lerp_angle(_pierna_izq.rotation, -target_leg, t)
-	_brazo_der.rotation = lerp_angle(_brazo_der.rotation, -target_arm, t)
-	_brazo_izq.rotation = lerp_angle(_brazo_izq.rotation, target_arm, t)
+	# --- Rebote (pulso amortiguado que oscila una vez) ----------------
+	if _golpe_activo:
+		_golpe_t += delta
+		var p: float = _golpe_t / GOLPE_DUR
+		if p >= 1.0:
+			_golpe_activo = false
+		else:
+			# sin(p*2PI) estira y comprime; (1-p) lo amortigua -> gelatina.
+			var g: float = sin(p * PI * 2.0) * (1.0 - p) * GOLPE_FUERZA * _golpe_dir
+			sy *= 1.0 + g
+			sx *= 1.0 - g
+
+	# --- Aplastado por input: chaparra la cabeza ----------------------
+	if _aplastado > 0.001:
+		sy *= 1.0 - APLASTADO_FUERZA * _aplastado
+		sx *= 1.0 + APLASTADO_FUERZA * 0.7 * _aplastado
+
+	# --- Balanceo/flotación (solo en el aire) --------------------------
+	var bob := 0.0
+	if not en_suelo:
+		bob = sin(_tiempo * BOB_FREC) * BOB_AMP
+	position.y = bob
+
+	# --- Aplicar escala final ------------------------------------------
+	scale = Vector2(ESCALA_BASE * sx, ESCALA_BASE * sy)
+
+
+# =========================================================================
+#  GOLPES (los dispara el jugador)
+# =========================================================================
+## Efecto de SALTAR: estirón con rebote.
+func golpe_salto() -> void:
+	_golpe_activo = true
+	_golpe_t = 0.0
+	_golpe_dir = 1.0
+
+
+## Efecto de ATERRIZAR: aplastón con rebote.
+func golpe_aterrizaje() -> void:
+	_golpe_activo = true
+	_golpe_t = 0.0
+	_golpe_dir = -1.0

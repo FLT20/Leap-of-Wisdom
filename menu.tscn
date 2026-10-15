@@ -81,7 +81,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.3, 0.6, 0.9)
 theme_override_constants/outline_size = 12
 theme_override_font_sizes/font_size = 64
-text = "SUBIR"
+text = "Salto de Sabiduría"
 horizontal_alignment = 1
 
 [node name="Subtitulo" type="Label" parent="Centro/Panel/Caja"]
@@ -113,21 +113,83 @@ theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 22
 text = "SALIR"
 
-[node name="Firma" type="Label" parent="."]
-modulate = Color(1, 1, 1, 0.35)
+[node name="SeparadorIdiomas" type="Control" parent="Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="BotonIdioma" type="Button" parent="Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boton")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boton")
+text = "Idioma"
+
+; --- CUADRO EMERGENTE DE SELECCIÓN DE IDIOMA -------------------------
+; Cubre toda la pantalla (con un velo oscuro) y muestra un panel centrado
+; con los dos idiomas. Empieza oculto; se abre al pulsar "Idioma".
+[node name="CuadroIdioma" type="Control" parent="."]
+visible = false
 layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -300.0
-offset_top = -60.0
-offset_right = 300.0
-offset_bottom = -12.0
 grow_horizontal = 2
-grow_vertical = 0
-theme_override_font_sizes/font_size = 32
-text = "Team Dead"
+grow_vertical = 2
+
+[node name="Velo" type="ColorRect" parent="CuadroIdioma"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Centro" type="CenterContainer" parent="CuadroIdioma"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CuadroIdioma/Centro"]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Caja" type="VBoxContainer" parent="CuadroIdioma/Centro/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Titulo" type="Label" parent="CuadroIdioma/Centro/Panel/Caja"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.88, 1, 0.95)
+theme_override_font_sizes/font_size = 22
+text = "Selecciona un idioma"
 horizontal_alignment = 1
-vertical_alignment = 1
+
+[node name="BotonES" type="Button" parent="CuadroIdioma/Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boton")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boton")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_panel")
+text = "Español"
+
+[node name="BotonEN" type="Button" parent="CuadroIdioma/Centro/Panel/Caja"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boton")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boton")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_panel")
+text = "English"

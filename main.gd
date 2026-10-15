@@ -16,6 +16,16 @@ extends Node2D
 ## Escena de plataforma que duplicaremos muchas veces.
 @export var platform_scene: PackedScene = preload("res://platform.tscn")
 
+## Escena del coleccionable de frases (el "tesoro").
+@export var recogible_scene: PackedScene = preload("res://recogible.tscn")
+
+## Distancia vertical MÍNIMA entre coleccionables. Al ser grande, aparecen
+## como sorpresa cada cierta altura y nunca cerca uno de otro.
+@export var recogible_gap_min: float = 560.0
+
+## Distancia vertical MÁXIMA entre coleccionables (variedad/imprevisión).
+@export var recogible_gap_max: float = 950.0
+
 ## Cuantas plataformas por tanda. Ahora 2, bien separadas.
 @export var platforms_per_row: int = 2
 
@@ -64,6 +74,10 @@ extends Node2D
 @export var inicio_moviles: float = 0.15
 @export var inicio_fragiles: float = 0.40
 
+## Suavidad del seguimiento vertical de la cámara (interpolación
+## exponencial). Más alto = sigue más de cerca; más bajo = más perezosa.
+const CAMARA_SUAVE := 9.0
+
 
 # ==================================================================
 #  FRASES DE GAME OVER
@@ -92,6 +106,10 @@ extends Node2D
 ## Etiqueta con la frase aleatoria de ánimo dentro del Game Over.
 @onready var frase_label: Label = $UI/GameOver/Centro/Panel/Caja/FraseLabel
 
+## Título ("¡GAME OVER!") y pista del panel de fin de partida.
+@onready var gameover_titulo: Label = $UI/GameOver/Centro/Panel/Caja/Titulo
+@onready var gameover_pista: Label = $UI/GameOver/Centro/Panel/Caja/Pista
+
 ## Señal que se emite cuando se activa el game over.
 signal game_over_activated
 
@@ -100,6 +118,15 @@ var _highest_y: float = 0.0
 
 ## Lista con las plataformas que están vivas ahora mismo.
 var _platforms: Array[Node2D] = []
+
+## Lista con los coleccionables de frases vivos ahora mismo.
+var _recogibles: Array[Node2D] = []
+
+## Próxima altura (Y) a la que soltar un coleccionable. Negativo = sin programar.
+var _proxima_y_recogible: float = -1.0
+
+## Etiqueta del contador de frases (la actualiza el jugador al recoger).
+@onready var contador_label: Label = $UI/ContadorFrases
 
 ## Altura MÁXIMA (en px) que ha alcanzado el personaje en la partida.
 @export var max_altura: float = 0.0
@@ -123,14 +150,14 @@ func _actualizar_marcador_altura() -> void:
 	if altura_actual > max_altura:
 		max_altura = altura_actual
 	var metros_record: int = int(round(max_altura / pixels_por_metro))
-	var texto_record := "Altura: %d m" % metros_record
+	var texto_record := LanguageManager.t("score_max") % metros_record
 	if score_label.text != texto_record:
 		score_label.text = texto_record
 
 	# 2) ALTURA ACTUAL (pequeña): sube y baja en vivo. Limitada a 0 para no
 	#    mostrar números negativos si el jugador cae por debajo del inicio.
 	var metros_actual: int = int(round(max(altura_actual, 0.0) / pixels_por_metro))
-	var texto_actual := "Actual: %d m" % metros_actual
+	var texto_actual := LanguageManager.t("score_actual") % metros_actual
 	if altura_actual_label.text != texto_actual:
 		altura_actual_label.text = texto_actual
 
@@ -161,6 +188,13 @@ func _inicializar_juego() -> void:
 	# Centramos la cámara en el jugador
 	_actualizar_camara()
 
+	# Enlazamos el contador de frases al jugador (lo actualiza al recoger).
+	if is_instance_valid(player) and is_instance_valid(contador_label):
+		player._contador_label = contador_label
+
+	# Programamos el primer coleccionable por encima del punto de partida.
+	_proxima_y_recogible = _highest_y - randf_range(recogible_gap_min, recogible_gap_max)
+
 	# El menú de Game Over empieza oculto
 	game_over.visible = false
 	_game_over_activo = false
@@ -184,9 +218,15 @@ func _activar_game_over() -> void:
 		player.set_physics_process(false)
 		player.velocity = Vector2.ZERO
 
-	# Mostramos una frase aleatoria
+	# Mostramos una frase aleatoria en el idioma activo
 	if is_instance_valid(frase_label):
-		frase_label.text = Frases.FRASES_GAME_OVER[randi() % Frases.FRASES_GAME_OVER.size()]
+		var frases_go: Array = Frases.obtener("game_over")
+		if not frases_go.is_empty():
+			frase_label.text = frases_go[randi() % frases_go.size()]
+		if is_instance_valid(gameover_titulo):
+			gameover_titulo.text = LanguageManager.t("gameover_titulo")
+		if is_instance_valid(gameover_pista):
+			gameover_pista.text = LanguageManager.t("gameover_pista")
 		game_over.visible = true
 
 
@@ -219,7 +259,7 @@ func _process(_delta: float) -> void:
 
 	# Actualizar sistemas del juego
 	_actualizar_mundo()
-	_actualizar_camara()
+	_actualizar_camara(_delta)
 	_actualizar_marcador_altura()
 	_verificar_game_over()
 
@@ -234,6 +274,9 @@ func _actualizar_mundo() -> void:
 	
 	# Reciclar plataformas que quedaron muy abajo
 	_reciclar_plataformas_antiguas()
+
+	# Reciclar coleccionables que quedaron muy abajo
+	_reciclar_recogibles()
 
 
 func _crear_plataformas_si_necesario() -> void:
@@ -258,12 +301,15 @@ func _reciclar_plataformas_antiguas() -> void:
 	_platforms = plataformas_validas
 
 
-func _actualizar_camara() -> void:
+func _actualizar_camara(delta: float = 1.0) -> void:
 	# La cámara sigue al jugador SOLO hacia arriba (nunca baja) y NUNCA se
 	# mueve en horizontal: el mundo queda fijo a izquierda y derecha.
+	# El seguimiento es SUAVE (interpolación exponencial) para no dar
+	# tirones al subir; con delta grande (p.e. al iniciar) centra de golpe.
 	var objetivo_y: float = player.position.y - 80.0
 	if objetivo_y < camera.position.y:
-		camera.position.y = objetivo_y
+		var factor: float = 1.0 - exp(-CAMARA_SUAVE * delta)
+		camera.position.y = lerp(camera.position.y, objetivo_y, factor)
 
 
 func _obtener_half_screen_h() -> float:
@@ -323,6 +369,48 @@ func _spawn_row() -> void:
 	# Preparar la altura para la siguiente tanda
 	var gap: float = randf_range(row_gap_min, row_gap_max)
 	_highest_y -= gap
+
+	# ¿Toca soltar un coleccionable de frases por esta zona?
+	_intentar_soltar_recogible()
+
+
+# ==================================================================
+#  COLECCIONABLES DE FRASES
+# ==================================================================
+##  Suelta un coleccionable si la altura actual alcanzó la programada, y
+##  luego programa el siguiente a una distancia aleatoria (sorpresa).
+func _intentar_soltar_recogible() -> void:
+	if _proxima_y_recogible < 0.0:
+		return
+	if _highest_y <= _proxima_y_recogible:
+		_crear_recogible(_proxima_y_recogible)
+		_proxima_y_recogible = _highest_y - randf_range(recogible_gap_min, recogible_gap_max)
+
+
+##  Crea un coleccionable en un EXTREMO (izquierda o derecha), nunca en el
+##  centro donde suele estar el jugador: así hay que ir a por él como tesoro.
+func _crear_recogible(y: float) -> void:
+	if recogible_scene == null:
+		return
+	var rec: Recogible = recogible_scene.instantiate()
+	var x: float = randf_range(140.0, 350.0) if randf() < 0.5 else randf_range(850.0, 1030.0)
+	rec.position = Vector2(x, y)
+	add_child(rec)
+	_recogibles.append(rec)
+
+
+##  Borra los coleccionables que quedaron por debajo de la vista.
+func _reciclar_recogibles() -> void:
+	var cam_bottom: float = camera.position.y + _obtener_half_screen_h() + view_margin
+	var validos: Array[Node2D] = []
+	for rec in _recogibles:
+		if not is_instance_valid(rec):
+			continue
+		if rec.position.y > cam_bottom:
+			rec.queue_free()
+		else:
+			validos.append(rec)
+	_recogibles = validos
 
 
 # ==================================================================

@@ -8,8 +8,8 @@
 ##      reacción a través del DialogueManager.
 ##
 ##  Delegación en otros nodos (arquitectura modular):
-##    - La ANIMACIÓN de piernas/brazos vive en player_animation.gd
-##      (nodo "Body").
+##    - La ANIMACIÓN de la cabeza (squash, balanceo, inclinación) vive en
+##      player_animation.gd (nodo "Head").
 ##    - El DIÁLOGO de burbuja vive en dialog.gd (nodo "DialogueManager").
 ##    - Los TEXTOS viven en frases.gd (recurso Frases).
 ## =========================================================================
@@ -27,6 +27,15 @@ const SPEED := 300.0
 ## Con este impulso y la gravedad de abajo el salto alcanza unos 188 px,
 ## suficiente para superar con holgura el hueco maximo entre maderas (150).
 const JUMP_VELOCITY := -700.0
+
+## SALTO VARIABLE: si el jugador SUELTA el botón de salto mientras sube,
+## la velocidad de subida se multiplica por este factor (<1), acortando el
+## salto. Así, un toque corto = salto corto; mantener pulsado = salto alto.
+const SALTO_CORTE := 0.42
+
+## SALTO POTENCIADO (flecha ABAJO): si el jugador se aplasta (flecha abajo
+## en el suelo) y luego salta, sale MUCHO más alto. Es el "resorte".
+const SALTO_APLASTADO := -1080.0
 
 ## Desaceleración horizontal al soltar las teclas (independiente del FPS).
 const DESACCEL := 2400.0
@@ -66,6 +75,15 @@ var _altura_inicio: float = 0.0
 var _coyote: float = 0.0
 var _jump_buffer: float = 0.0
 
+## true mientras el personaje está subiendo por un salto (para el corte).
+var _saltando: bool = false
+
+## true mientras el jugador mantiene flecha ABAJO apoyado (cargando resorte).
+var _aplastado: bool = false
+
+## Contador de coleccionables de frases recogidos en la partida.
+var _frases_recogidas: int = 0
+
 
 # =========================================================================
 #  REFERENCIAS A OTROS NODOS
@@ -77,8 +95,14 @@ var _jump_buffer: float = 0.0
 @onready var _bubble: Control = $SpeechBubble
 @onready var _bubble_label: Label = $SpeechBubble/Label
 
-## Nodo de animación del cuerpo (player_animation.gd).
-@onready var _animacion: Node2D = $Body
+## Nodo de animación de la cabeza (player_animation.gd).
+@onready var _animacion: Node2D = $Head
+
+## Detector (Area2D) que rodea a la cabeza para recoger coleccionables.
+@onready var _detector: Area2D = $Detector
+
+## Etiqueta del contador de frases recogidas (la pone main.gd al iniciar).
+var _contador_label: Label = null
 
 
 # =========================================================================
@@ -91,10 +115,33 @@ func _ready() -> void:
 	floor_snap_length = 8.0
 	safe_margin = 0.08
 
+	# Capas de colisión: capa 1 = jugador; máscara 2 = solo detecta las
+	# maderas (que están en la capa 2). Así el jugador pisa las maderas pero
+	# las maderas nunca lo empujan ni chocan entre sí.
+	collision_layer = 1
+	collision_mask = 2
+
+	# El detector de coleccionables avisa cuando toca uno.
+	if _detector != null and not _detector.area_entered.is_connected(_on_area_recogida):
+		_detector.area_entered.connect(_on_area_recogida)
+
 	# Enlazamos la burbuja con el gestor para la burbuja MANUAL (tecla M).
 	# El diálogo automático está desactivado a petición del usuario.
 	if _gestor_dialogo != null:
 		_gestor_dialogo._init_dialogo(_bubble, _bubble_label)
+
+	# Texto por defecto de la burbuja en el idioma activo, y refresco si el
+	# jugador cambia de idioma durante la partida (menú de pausa).
+	if _bubble_label != null:
+		_bubble_label.text = LanguageManager.t("burbuja_inicio")
+	if not LanguageManager.idioma_cambiado.is_connected(_on_idioma_cambiado):
+		LanguageManager.idioma_cambiado.connect(_on_idioma_cambiado)
+
+
+## Refresca el texto por defecto de la burbuja al cambiar de idioma.
+func _on_idioma_cambiado(_nuevo_idioma: int) -> void:
+	if _bubble_label != null:
+		_bubble_label.text = LanguageManager.t("burbuja_inicio")
 
 
 # =========================================================================
@@ -124,11 +171,35 @@ func _physics_process(delta: float) -> void:
 	else:
 		_jump_buffer -= delta
 
+	# --- 3b) Aplastado con flecha ABAJO (cargar resorte) --------------
+	# Apoyado y con flecha abajo mantenida -> la cabeza se achatarra (carga).
+	_aplastado = is_on_floor() and Input.is_action_pressed("ui_down")
+
 	# --- 4) Salto (usa coyote time + jump buffer) ---------------------
 	if _jump_buffer > 0.0 and _coyote > 0.0:
-		velocity.y = JUMP_VELOCITY
+		if _aplastado:
+			# Resorte: salto MUCHO más alto (decisión A1).
+			velocity.y = SALTO_APLASTADO
+			SFX.pop_fuerte(self)
+		else:
+			velocity.y = JUMP_VELOCITY
+			SFX.pop(self)
 		_jump_buffer = 0.0
 		_coyote = 0.0
+		_saltando = true
+		_aplastado = false
+		# Feedback: estirón con rebote de la cabeza.
+		if _animacion != null and _animacion.has_method("golpe_salto"):
+			_animacion.golpe_salto()
+
+	# --- 4b) Salto variable: soltar el botón acorta el salto ----------
+	if _saltando and velocity.y < 0.0 and not Input.is_action_pressed("ui_accept"):
+		velocity.y *= SALTO_CORTE
+		_saltando = false
+
+	# Si ya no estamos subiendo, damos por terminado el salto.
+	if velocity.y >= 0.0:
+		_saltando = false
 
 	# --- 5) Movimiento horizontal -------------------------------------
 	var direction := Input.get_axis("ui_left", "ui_right")
@@ -150,9 +221,9 @@ func _physics_process(delta: float) -> void:
 	# --- 7) Límite lateral (envuelve por los bordes de la cámara) -----
 	_limitar_bordes()
 
-	# --- 8) Animación del cuerpo (delegada en el nodo "Body") --------
+	# --- 8) Animación de la cabeza (delegada en el nodo "Head") ------
 	if _animacion != null and _animacion.has_method("actualizar_animacion"):
-		_animacion.actualizar_animacion(delta, velocity.x, is_on_floor())
+		_animacion.actualizar_animacion(delta, velocity.x, velocity.y, is_on_floor(), _aplastado)
 
 
 ## Mantiene al jugador dentro de la pantalla teletransportándolo al otro
@@ -174,11 +245,36 @@ func _limitar_bordes() -> void:
 ## Usamos la colisión del último frame para saber sobre qué pisamos y,
 ## si ese cuerpo entiende el mensaje "romper()", lo rompemos.
 func _avisar_aterrizaje() -> void:
+	# Feedback de aterrizaje: aplastón de la cabeza + sonido.
+	if _animacion != null and _animacion.has_method("golpe_aterrizaje"):
+		_animacion.golpe_aterrizaje()
+	SFX.thud(self)
+
 	for i in range(get_slide_collision_count()):
 		var colision := get_slide_collision(i)
 		var cuerpo := colision.get_collider()
 		if cuerpo != null and cuerpo.has_method("romper"):
 			cuerpo.romper()
+
+
+# =========================================================================
+#  COLECCIONABLES DE FRASES
+# =========================================================================
+##  Lo llama el detector cuando la cabeza toca un coleccionable (Area2D).
+##  Suma 1 al contador, muestra una frase sorpresa y recoge el objeto.
+func _on_area_recogida(area: Area2D) -> void:
+	if area == null or not area.has_method("recoger"):
+		return
+	_frases_recogidas += 1
+	# Frase sorpresa (inspiración / filosofía / humor) en la burbuja.
+	if _gestor_dialogo != null:
+		var frases := Frases.obtener("coleccionable")
+		if not frases.is_empty():
+			_gestor_dialogo._mostrar_manual(frases, true)
+	# Refresca el contador en pantalla.
+	if _contador_label != null:
+		_contador_label.text = "✦ %d" % _frases_recogidas
+	area.recoger()
 
 
 # =========================================================================
@@ -204,24 +300,24 @@ func _frases_para_contexto() -> Array:
 	# En el aire: distingue entre subir (salto) y bajar (caida).
 	if not is_on_floor():
 		if velocity.y < -10.0:
-			return Frases.FRASES_SALTO
-		return Frases.FRASES_CAIDA
+			return Frases.obtener("salto")
+		return Frases.obtener("caida")
 
 	# En el suelo: construimos una lista combinada.
 	var lista: Array = []
 
 	# Si se esta moviendo, frases de caminar; si esta parado, de reposo.
 	if abs(velocity.x) > 1.0:
-		lista.append_array(Frases.FRASES_CAMINAR)
+		lista.append_array(Frases.obtener("caminar"))
 	else:
-		lista.append_array(Frases.FRASES_QUIETO)
+		lista.append_array(Frases.obtener("quieto"))
 
 	# Si ademas esta bastante alto, anadimos frases de altura.
 	if (_altura_inicio - global_position.y) > ALTURA_PARA_BROMA:
-		lista.append_array(Frases.FRASES_ALTURA)
+		lista.append_array(Frases.obtener("altura"))
 
 	# Red de seguridad: nunca devolvemos una lista vacia.
 	if lista.is_empty():
-		lista.append_array(Frases.FRASES_QUIETO)
+		lista.append_array(Frases.obtener("quieto"))
 
 	return lista
